@@ -18,16 +18,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#home">Home</a>
+                        <a class="nav-link active" href="#home" onclick="showSection('home')">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#browser">Data Browser</a>
+                        <a class="nav-link" href="#browser" onclick="showSection('browser')">Data Browser</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#analysis">Analysis</a>
+                        <a class="nav-link" href="#analysis" onclick="showSection('analysis')">Analysis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
+                        <a class="nav-link" href="#about" onclick="showSection('about')">About</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
@@ -65,7 +65,7 @@
             <!-- Statistics Cards -->
             <div class="row mb-5">
                 <div class="col-md-3">
-                    <div class="card text-center">
+                    <div class="card text-center stats-card">
                         <div class="card-body">
                             <h3 class="text-primary" id="dataset-count">Loading...</h3>
                             <p class="card-text">Datasets</p>
@@ -73,7 +73,7 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
+                    <div class="card text-center stats-card">
                         <div class="card-body">
                             <h3 class="text-primary" id="cell-count">Loading...</h3>
                             <p class="card-text">Cells</p>
@@ -81,7 +81,7 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
+                    <div class="card text-center stats-card">
                         <div class="card-body">
                             <h3 class="text-primary" id="tissue-count">Loading...</h3>
                             <p class="card-text">Tissues</p>
@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
+                    <div class="card text-center stats-card">
                         <div class="card-body">
                             <h3 class="text-primary" id="analysis-count">Loading...</h3>
                             <p class="card-text">Analyses</p>
@@ -166,7 +166,7 @@
             </div>
             
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header">
                             <h5>Differential Gene Expression</h5>
@@ -177,7 +177,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header">
                             <h5>Clustering Analysis</h5>
@@ -188,15 +188,55 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Pathway Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Analyze biological pathways and gene sets</p>
+                            <button class="btn btn-primary" onclick="showAnalysisModal('pathway')">Start Analysis</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Trajectory Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Study cell development and pseudotime</p>
+                            <button class="btn btn-primary" onclick="showAnalysisModal('trajectory')">Start Analysis</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- About Section -->
         <section id="about" class="section d-none">
             <div class="row">
-                <div class="col-12">
+                <div class="col-md-8 mx-auto">
                     <h2>About Micro-Platform</h2>
-                    <p>Your comprehensive single-cell analysis platform powered by cutting-edge bioinformatics tools.</p>
+                    <p class="lead">Your comprehensive single-cell analysis platform powered by cutting-edge bioinformatics tools.</p>
+                    
+                    <h4>Features</h4>
+                    <ul>
+                        <li>Interactive data exploration and visualization</li>
+                        <li>Advanced clustering and cell type identification</li>
+                        <li>Differential gene expression analysis</li>
+                        <li>Pathway enrichment analysis</li>
+                        <li>Trajectory analysis and pseudotime inference</li>
+                        <li>Multi-sample comparison and batch correction</li>
+                    </ul>
+                    
+                    <h4>Supported Data Types</h4>
+                    <ul>
+                        <li>Single-cell RNA sequencing (scRNA-seq)</li>
+                        <li>Single-nucleus RNA sequencing (snRNA-seq)</li>
+                        <li>Spatial transcriptomics</li>
+                        <li>Single-cell ATAC sequencing (scATAC-seq)</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -227,6 +267,13 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
