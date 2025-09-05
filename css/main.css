@@ -1,0 +1,312 @@
+/* Custom styles for Micro-Platform */
+
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+/* Main content */
+.section {
+    padding: 2rem 0;
+    min-height: calc(100vh - 76px);
+}
+
+/* Home section */
+#home {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-top: -2rem;
+    padding-top: 4rem;
+}
+
+#home .display-4 {
+    margin-bottom: 1rem;
+    font-weight: 300;
+}
+
+#home .lead {
+    margin-bottom: 2rem;
+    font-size: 1.25rem;
+}
+
+#home .card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    transition: transform 0.2s;
+}
+
+#home .card:hover {
+    transform: translateY(-2px);
+}
+
+#home .card h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Data browser */
+.table-responsive {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-top: none;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.15);
+}
+
+/* Filters */
+.form-select, .form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Loading animations */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Notifications */
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+    font-weight: 500;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 1rem 1rem;
+}
+
+/* Form styling */
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Analysis cards */
+#analysis .card {
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+#analysis .card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Data visualization area */
+.plot-container {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* Statistics cards */
+.stats-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.stats-card h3 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card p {
+    color: var(--secondary-color);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #home .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    #home .lead {
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .card h3 {
+        font-size: 2rem;
+    }
+    
+    .section {
+        padding: 1rem 0;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    #analysis .card {
+        height: auto;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+    
+    #home {
+        padding-top: 2rem;
+    }
+    
+    .stats-card h3 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bs-body-bg: #1a1a1a;
+        --bs-body-color: #ffffff;
+    }
+    
+    body {
+        background-color: #1a1a1a;
+        color: #ffffff;
+    }
+    
+    .card {
+        background-color: #2d2d2d;
+        color: #ffffff;
+    }
+    
+    .table {
+        --bs-table-bg: #2d2d2d;
+        --bs-table-color: #ffffff;
+        color: #ffffff;
+    }
+    
+    .form-select, .form-control {
+        background-color: #2d2d2d;
+        border-color: #495057;
+        color: #ffffff;
+    }
+    
+    .modal-content {
+        background-color: #2d2d2d;
+        color: #ffffff;
+    }
+}
