@@ -1,72 +1,99 @@
 // Global variables
 let currentUser = null;
 let currentDatasets = [];
+let isFirebaseReady = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    
     // Wait for Firebase to load
     setTimeout(() => {
-        initializeApp();
-    }, 1000);
+        if (window.firebase) {
+            isFirebaseReady = true;
+            initializeApp();
+        } else {
+            console.error('Firebase not loaded, retrying...');
+            setTimeout(() => {
+                if (window.firebase) {
+                    isFirebaseReady = true;
+                    initializeApp();
+                } else {
+                    console.error('Firebase failed to load');
+                    showFallbackData();
+                }
+            }, 2000);
+        }
+    }, 1500);
 });
 
 function initializeApp() {
     console.log('Initializing application...');
+    setupEventListeners();
     loadStatistics();
     loadSampleData();
-    setupEventListeners();
 }
 
 function setupEventListeners() {
     // Auth form submission
-    document.getElementById('auth-form').addEventListener('submit', handleLogin);
+    const authForm = document.getElementById('auth-form');
+    if (authForm) {
+        authForm.addEventListener('submit', handleLogin);
+    }
     
     // Filter changes
-    document.getElementById('tissue-filter').addEventListener('change', filterData);
-    document.getElementById('celltype-filter').addEventListener('change', filterData);
-    document.getElementById('gene-search').addEventListener('input', debounce(filterData, 500));
+    const tissueFilter = document.getElementById('tissue-filter');
+    const celltypeFilter = document.getElementById('celltype-filter');
+    const geneSearch = document.getElementById('gene-search');
+    
+    if (tissueFilter) tissueFilter.addEventListener('change', filterData);
+    if (celltypeFilter) celltypeFilter.addEventListener('change', filterData);
+    if (geneSearch) geneSearch.addEventListener('input', debounce(filterData, 500));
 }
 
 // Navigation functions
 function showSection(sectionId) {
+    console.log('Showing section:', sectionId);
+    
     // Hide all sections
     document.querySelectorAll('.section').forEach(section => {
         section.classList.add('d-none');
     });
     
     // Show selected section
-    document.getElementById(sectionId).classList.remove('d-none');
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.remove('d-none');
+    }
     
     // Update navigation
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    document.querySelector(`[href="#${sectionId}"]`).classList.add('active');
+    
+    const activeLink = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
 }
 
 // Authentication functions
 function showLogin() {
-    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    loginModal.show();
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        const modal = new bootstrap.Modal(loginModal);
+        modal.show();
+    }
 }
 
 async function handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
     
-    try {
-        const userCredential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, email, password);
-        console.log('Login successful:', userCredential.user);
-        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-        showNotification('Login successful!', 'success');
-    } catch (error) {
-        console.error('Login error:', error);
-        showNotification('Login failed: ' + error.message, 'error');
+    if (!isFirebaseReady) {
+        showNotification('System is still loading, please try again', 'warning');
+        return;
     }
-}
-
-async function registerUser() {
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
@@ -76,6 +103,69 @@ async function registerUser() {
     }
     
     try {
+        showLoading(true);
+        const userCredential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, email, password);
+        console.log('Login successful:', userCredential.user);
+        
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (loginModal) {
+            loginModal.hide();
+        }
+        
+        showNotification('Login successful!', 'success');
+        
+        // Clear form
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        let errorMessage = 'Login failed';
+        
+        switch (error.code) {
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Incorrect password';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Too many failed attempts. Please try again later';
+                break;
+            default:
+                errorMessage = error.message || 'Login failed';
+        }
+        
+        showNotification(errorMessage, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function registerUser() {
+    if (!isFirebaseReady) {
+        showNotification('System is still loading, please try again', 'warning');
+        return;
+    }
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showNotification('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    try {
+        showLoading(true);
         const userCredential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, email, password);
         console.log('Registration successful:', userCredential.user);
         
@@ -87,15 +177,47 @@ async function registerUser() {
             lastActive: new Date()
         });
         
-        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (loginModal) {
+            loginModal.hide();
+        }
+        
         showNotification('Registration successful!', 'success');
+        
+        // Clear form
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        
     } catch (error) {
         console.error('Registration error:', error);
-        showNotification('Registration failed: ' + error.message, 'error');
+        let errorMessage = 'Registration failed';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                errorMessage = 'An account with this email already exists';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'Password is too weak';
+                break;
+            default:
+                errorMessage = error.message || 'Registration failed';
+        }
+        
+        showNotification(errorMessage, 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
 async function logout() {
+    if (!isFirebaseReady) {
+        showNotification('System is still loading', 'warning');
+        return;
+    }
+    
     try {
         await window.firebase.signOut(window.firebase.auth);
         showNotification('Logged out successfully', 'success');
@@ -108,6 +230,11 @@ async function logout() {
 // Data loading functions
 async function loadStatistics() {
     try {
+        if (!isFirebaseReady) {
+            showFallbackStats();
+            return;
+        }
+        
         // Load dataset statistics from Firestore
         const datasetsSnapshot = await window.firebase.getDocs(window.firebase.collection(window.firebase.db, 'datasets'));
         
@@ -123,24 +250,40 @@ async function loadStatistics() {
         });
         
         // Update statistics display
-        document.getElementById('dataset-count').textContent = datasetsSnapshot.size.toLocaleString();
-        document.getElementById('cell-count').textContent = totalCells.toLocaleString();
-        document.getElementById('tissue-count').textContent = tissues.size.toLocaleString();
-        document.getElementById('analysis-count').textContent = '0'; // Will be updated when analyses are loaded
+        updateStatElement('dataset-count', datasetsSnapshot.size);
+        updateStatElement('cell-count', totalCells);
+        updateStatElement('tissue-count', tissues.size);
+        updateStatElement('analysis-count', 0); // Will be updated when analyses are loaded
         
     } catch (error) {
         console.error('Error loading statistics:', error);
-        // Show placeholder data
-        document.getElementById('dataset-count').textContent = '12';
-        document.getElementById('cell-count').textContent = '1,234,567';
-        document.getElementById('tissue-count').textContent = '15';
-        document.getElementById('analysis-count').textContent = '8,901';
+        showFallbackStats();
+    }
+}
+
+function showFallbackStats() {
+    updateStatElement('dataset-count', 12);
+    updateStatElement('cell-count', 1234567);
+    updateStatElement('tissue-count', 15);
+    updateStatElement('analysis-count', 8901);
+}
+
+function updateStatElement(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = typeof value === 'number' ? value.toLocaleString() : value;
     }
 }
 
 async function loadSampleData() {
-    // Create sample datasets if none exist
     try {
+        if (!isFirebaseReady) {
+            console.log('Firebase not ready, loading fallback data');
+            loadFallbackDatasets();
+            return;
+        }
+        
+        // Check if datasets exist
         const datasetsSnapshot = await window.firebase.getDocs(window.firebase.collection(window.firebase.db, 'datasets'));
         
         if (datasetsSnapshot.empty) {
@@ -152,6 +295,7 @@ async function loadSampleData() {
         await loadFilters();
     } catch (error) {
         console.error('Error loading sample data:', error);
+        loadFallbackDatasets();
     }
 }
 
@@ -189,6 +333,28 @@ async function createSampleDatasets() {
             status: 'ready',
             uploadDate: new Date(),
             cellTypes: ['Hepatocytes', 'Kupffer cells', 'Stellate cells', 'Endothelial cells']
+        },
+        {
+            id: 'lung_001',
+            name: 'Human Lung scRNA-seq',
+            tissue: 'Lung',
+            cellCount: 56789,
+            geneCount: 24567,
+            description: 'Respiratory epithelial and immune cell analysis',
+            status: 'ready',
+            uploadDate: new Date(),
+            cellTypes: ['Pneumocytes', 'Alveolar macrophages', 'T cells', 'B cells']
+        },
+        {
+            id: 'kidney_001',
+            name: 'Human Kidney scRNA-seq',
+            tissue: 'Kidney',
+            cellCount: 43210,
+            geneCount: 22345,
+            description: 'Nephron and collecting duct cell analysis',
+            status: 'ready',
+            uploadDate: new Date(),
+            cellTypes: ['Podocytes', 'Tubular cells', 'Mesangial cells', 'Endothelial cells']
         }
     ];
     
@@ -197,6 +363,49 @@ async function createSampleDatasets() {
     }
     
     console.log('Sample datasets created');
+}
+
+function loadFallbackDatasets() {
+    currentDatasets = [
+        {
+            id: 'heart_001',
+            name: 'Human Heart scRNA-seq',
+            tissue: 'Heart',
+            cellCount: 45678,
+            geneCount: 23456,
+            description: 'Single-cell RNA sequencing of human heart tissue',
+            cellTypes: ['Cardiomyocytes', 'Fibroblasts', 'Endothelial cells', 'Immune cells']
+        },
+        {
+            id: 'brain_001',
+            name: 'Human Brain Cortex scRNA-seq',
+            tissue: 'Brain',
+            cellCount: 67890,
+            geneCount: 25678,
+            description: 'Single-cell analysis of human cortical neurons',
+            cellTypes: ['Neurons', 'Astrocytes', 'Oligodendrocytes', 'Microglia']
+        },
+        {
+            id: 'liver_001',
+            name: 'Human Liver scRNA-seq',
+            tissue: 'Liver',
+            cellCount: 34567,
+            geneCount: 21234,
+            description: 'Hepatocyte and non-parenchymal cell analysis',
+            cellTypes: ['Hepatocytes', 'Kupffer cells', 'Stellate cells', 'Endothelial cells']
+        }
+    ];
+    
+    displayDatasets(currentDatasets);
+    loadFallbackFilters();
+}
+
+function loadFallbackFilters() {
+    const tissues = [...new Set(currentDatasets.map(d => d.tissue))];
+    const cellTypes = [...new Set(currentDatasets.flatMap(d => d.cellTypes || []))];
+    
+    populateFilter('tissue-filter', tissues);
+    populateFilter('celltype-filter', cellTypes);
 }
 
 async function loadDatasets() {
@@ -216,12 +425,20 @@ async function loadDatasets() {
         displayDatasets(currentDatasets);
     } catch (error) {
         console.error('Error loading datasets:', error);
+        loadFallbackDatasets();
     }
 }
 
 function displayDatasets(datasets) {
     const tbody = document.getElementById('dataset-tbody');
+    if (!tbody) return;
+    
     tbody.innerHTML = '';
+    
+    if (datasets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No datasets found</td></tr>';
+        return;
+    }
     
     datasets.forEach(dataset => {
         const row = document.createElement('tr');
@@ -255,29 +472,36 @@ async function loadFilters() {
             }
         });
         
-        // Populate tissue filter
-        const tissueFilter = document.getElementById('tissue-filter');
-        tissueFilter.innerHTML = '<option value="">All Tissues</option>';
-        Array.from(tissues).sort().forEach(tissue => {
-            const option = document.createElement('option');
-            option.value = tissue;
-            option.textContent = tissue;
-            tissueFilter.appendChild(option);
-        });
-        
-        // Populate cell type filter
-        const cellTypeFilter = document.getElementById('celltype-filter');
-        cellTypeFilter.innerHTML = '<option value="">All Cell Types</option>';
-        Array.from(cellTypes).sort().forEach(cellType => {
-            const option = document.createElement('option');
-            option.value = cellType;
-            option.textContent = cellType;
-            cellTypeFilter.appendChild(option);
-        });
+        populateFilter('tissue-filter', Array.from(tissues).sort());
+        populateFilter('celltype-filter', Array.from(cellTypes).sort());
         
     } catch (error) {
         console.error('Error loading filters:', error);
+        loadFallbackFilters();
     }
+}
+
+function populateFilter(filterId, options) {
+    const filter = document.getElementById(filterId);
+    if (!filter) return;
+    
+    const currentValue = filter.value;
+    const defaultOption = filter.querySelector('option[value=""]');
+    
+    filter.innerHTML = '';
+    
+    if (defaultOption) {
+        filter.appendChild(defaultOption);
+    }
+    
+    options.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        optionElement.textContent = option;
+        filter.appendChild(optionElement);
+    });
+    
+    filter.value = currentValue;
 }
 
 // Data filtering and search
@@ -289,7 +513,7 @@ function filterData() {
     let filteredDatasets = currentDatasets.filter(dataset => {
         let matchesTissue = !tissueFilter || dataset.tissue === tissueFilter;
         let matchesCellType = !cellTypeFilter || (dataset.cellTypes && dataset.cellTypes.includes(cellTypeFilter));
-        let matchesGene = !geneSearch || dataset.description.toLowerCase().includes(geneSearch);
+        let matchesGene = !geneSearch || dataset.description.toLowerCase().includes(geneSearch) || dataset.name.toLowerCase().includes(geneSearch);
         
         return matchesTissue && matchesCellType && matchesGene;
     });
@@ -309,8 +533,8 @@ function viewDataset(datasetId) {
     const dataset = currentDatasets.find(d => d.id === datasetId);
     if (dataset) {
         showNotification(`Viewing dataset: ${dataset.name}`, 'info');
-        // TODO: Implement dataset visualization
         console.log('View dataset:', dataset);
+        // TODO: Implement dataset visualization
     }
 }
 
@@ -318,13 +542,14 @@ function analyzeDataset(datasetId) {
     const dataset = currentDatasets.find(d => d.id === datasetId);
     if (dataset) {
         showNotification(`Starting analysis for: ${dataset.name}`, 'info');
-        // TODO: Implement analysis workflow
         console.log('Analyze dataset:', dataset);
+        // TODO: Implement analysis workflow
     }
 }
 
 function showAnalysisModal(analysisType) {
     showNotification(`${analysisType} analysis coming soon!`, 'info');
+    console.log('Analysis type:', analysisType);
     // TODO: Implement analysis modals
 }
 
@@ -345,7 +570,7 @@ function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
     notification.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -360,3 +585,32 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+function showLoading(show) {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        if (show) {
+            overlay.classList.remove('d-none');
+        } else {
+            overlay.classList.add('d-none');
+        }
+    }
+}
+
+function showFallbackData() {
+    console.log('Loading fallback data due to Firebase connection issues');
+    showFallbackStats();
+    loadFallbackDatasets();
+    showNotification('Running in offline mode - some features may be limited', 'warning');
+}
+
+// Make functions globally available
+window.showSection = showSection;
+window.showLogin = showLogin;
+window.registerUser = registerUser;
+window.logout = logout;
+window.filterData = filterData;
+window.clearFilters = clearFilters;
+window.viewDataset = viewDataset;
+window.analyzeDataset = analyzeDataset;
+window.showAnalysisModal = showAnalysisModal;
