@@ -3,286 +3,873 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro-Platform | Single Cell Analysis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/main.css" rel="stylesheet">
+    <title>CellVision | Advanced Single Cell Analysis Platform</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --light-bg: #f8f9fa;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .navbar.scrolled .nav-link {
+            color: var(--text-dark) !important;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-login {
+            padding: 0.75rem 2rem;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            color: var(--text-light);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 150px 0 100px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,224L48,208C96,192,192,160,288,165.3C384,171,480,213,576,218.7C672,224,768,192,864,165.3C960,139,1056,117,1152,122.7C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 120px;
+            height: 120px;
+            background: var(--secondary-gradient);
+            border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+            top: 60%;
+            right: 10%;
+            animation-delay: 3s;
+        }
+
+        .shape-3 {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+            bottom: 20%;
+            left: 30%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(30px) rotate(240deg); }
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .btn-primary {
+            padding: 1rem 2.5rem;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            padding: 1rem 2.5rem;
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .hero-visual {
+            position: relative;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+
+        .dna-helix {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 100px 0;
+            background: white;
+            position: relative;
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--primary-gradient);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            font-size: 1.3rem;
+            color: #666;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: all 0.5s ease;
+            border-radius: 50%;
+            transform: scale(0);
+        }
+
+        .feature-card:hover::before {
+            transform: scale(1);
+            opacity: 0.1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: var(--primary-gradient);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Analysis Tools Section */
+        .tools-section {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::after {
+            content: '→';
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+        }
+
+        .tool-card:hover::after {
+            opacity: 1;
+            right: 1.5rem;
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .tool-description {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 50px 0;
+            background: var(--dark-gradient);
+            color: white;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 30px;
+            height: 30px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .features-grid,
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">Micro-Platform</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#home" onclick="showSection('home')">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#browser" onclick="showSection('browser')">Data Browser</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#analysis" onclick="showSection('analysis')">Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about" onclick="showSection('about')">About</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item" id="login-nav">
-                        <a class="nav-link" href="#" onclick="showLogin()">Login</a>
-                    </li>
-                    <li class="nav-item d-none" id="user-nav">
-                        <div class="dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <span id="user-email"></span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
-                            </ul>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">🧬</div>
+                CellVision
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#tools" class="nav-link">Analysis</a></li>
+                <li><a href="#data" class="nav-link">Data Browser</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><button class="btn-login" onclick="openModal()">Get Started</button></li>
+            </ul>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container-fluid">
-        <!-- Home Section -->
-        <section id="home" class="section">
-            <div class="row">
-                <div class="col-12 text-center py-5">
-                    <h1 class="display-4">Single Cell Analysis Platform</h1>
-                    <p class="lead">Explore and analyze single-cell transcriptomics data with powerful interactive tools</p>
-                    <button class="btn btn-primary btn-lg" onclick="showSection('browser')">Browse Data</button>
-                    <button class="btn btn-outline-primary btn-lg ms-2" onclick="showSection('analysis')">Start Analysis</button>
-                </div>
-            </div>
-            
-            <!-- Statistics Cards -->
-            <div class="row mb-5">
-                <div class="col-md-3">
-                    <div class="card text-center stats-card">
-                        <div class="card-body">
-                            <h3 class="text-primary" id="dataset-count">Loading...</h3>
-                            <p class="card-text">Datasets</p>
-                        </div>
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <h1>Decode Life at Single Cell Resolution</h1>
+                    <p class="subtitle">Advanced bioinformatics platform for single-cell transcriptomics analysis with AI-powered insights</p>
+                    <div class="hero-buttons">
+                        <a href="#tools" class="btn-primary">Start Analysis</a>
+                        <a href="#features" class="btn-secondary">Learn More</a>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card text-center stats-card">
-                        <div class="card-body">
-                            <h3 class="text-primary" id="cell-count">Loading...</h3>
-                            <p class="card-text">Cells</p>
-                        </div>
+                <div class="hero-visual">
+                    <div class="dna-helix">
+                        <!-- SVG or Canvas animation would go here -->
+                        <svg viewBox="0 0 400 400" style="width: 100%; height: 100%;">
+                            <defs>
+                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="200" cy="200" r="150" fill="none" stroke="url(#gradient1)" stroke-width="2" opacity="0.3"/>
+                            <circle cx="200" cy="200" r="120" fill="none" stroke="url(#gradient1)" stroke-width="2" opacity="0.4"/>
+                            <circle cx="200" cy="200" r="90" fill="none" stroke="url(#gradient1)" stroke-width="2" opacity="0.5"/>
+                            <circle cx="200" cy="200" r="60" fill="none" stroke="url(#gradient1)" stroke-width="3" opacity="0.6"/>
+                            <circle cx="200" cy="200" r="30" fill="url(#gradient1)" opacity="0.8"/>
+                        </svg>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center stats-card">
-                        <div class="card-body">
-                            <h3 class="text-primary" id="tissue-count">Loading...</h3>
-                            <p class="card-text">Tissues</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center stats-card">
-                        <div class="card-body">
-                            <h3 class="text-primary" id="analysis-count">Loading...</h3>
-                            <p class="card-text">Analyses</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Data Browser Section -->
-        <section id="browser" class="section d-none">
-            <div class="row">
-                <div class="col-12">
-                    <h2>Data Browser</h2>
-                    <p>Browse and explore single-cell datasets</p>
-                </div>
-            </div>
-            
-            <!-- Filters -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <label for="tissue-filter" class="form-label">Tissue Type</label>
-                    <select class="form-select" id="tissue-filter">
-                        <option value="">All Tissues</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="celltype-filter" class="form-label">Cell Type</label>
-                    <select class="form-select" id="celltype-filter">
-                        <option value="">All Cell Types</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="gene-search" class="form-label">Gene Search</label>
-                    <input type="text" class="form-control" id="gene-search" placeholder="Enter gene symbol">
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button class="btn btn-primary" onclick="filterData()">Search</button>
-                    <button class="btn btn-outline-secondary ms-2" onclick="clearFilters()">Clear</button>
-                </div>
-            </div>
-            
-            <!-- Data Table -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="table-responsive">
-                        <table class="table table-striped" id="dataset-table">
-                            <thead>
-                                <tr>
-                                    <th>Dataset ID</th>
-                                    <th>Tissue</th>
-                                    <th>Cell Count</th>
-                                    <th>Gene Count</th>
-                                    <th>Description</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dataset-tbody">
-                                <!-- Data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Analysis Section -->
-        <section id="analysis" class="section d-none">
-            <div class="row">
-                <div class="col-12">
-                    <h2>Analysis Tools</h2>
-                    <p>Perform single-cell analysis with your data</p>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Differential Gene Expression</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Compare gene expression between cell groups</p>
-                            <button class="btn btn-primary" onclick="showAnalysisModal('differential')">Start Analysis</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Clustering Analysis</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Identify cell clusters and types</p>
-                            <button class="btn btn-primary" onclick="showAnalysisModal('clustering')">Start Analysis</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Pathway Analysis</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Analyze biological pathways and gene sets</p>
-                            <button class="btn btn-primary" onclick="showAnalysisModal('pathway')">Start Analysis</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Trajectory Analysis</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Study cell development and pseudotime</p>
-                            <button class="btn btn-primary" onclick="showAnalysisModal('trajectory')">Start Analysis</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section id="about" class="section d-none">
-            <div class="row">
-                <div class="col-md-8 mx-auto">
-                    <h2>About Micro-Platform</h2>
-                    <p class="lead">Your comprehensive single-cell analysis platform powered by cutting-edge bioinformatics tools.</p>
-                    
-                    <h4>Features</h4>
-                    <ul>
-                        <li>Interactive data exploration and visualization</li>
-                        <li>Advanced clustering and cell type identification</li>
-                        <li>Differential gene expression analysis</li>
-                        <li>Pathway enrichment analysis</li>
-                        <li>Trajectory analysis and pseudotime inference</li>
-                        <li>Multi-sample comparison and batch correction</li>
-                    </ul>
-                    
-                    <h4>Supported Data Types</h4>
-                    <ul>
-                        <li>Single-cell RNA sequencing (scRNA-seq)</li>
-                        <li>Single-nucleus RNA sequencing (snRNA-seq)</li>
-                        <li>Spatial transcriptomics</li>
-                        <li>Single-cell ATAC sequencing (scATAC-seq)</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Login / Register</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="auth-form">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" required>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary" id="login-btn">Login</button>
-                            <button type="button" class="btn btn-outline-primary" id="register-btn" onclick="registerUser()">Register</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Loading indicator -->
-    <div id="loading-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" data-target="1250">0</div>
+                    <div class="stat-label">Datasets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔬</div>
+                    <div class="stat-number" data-target="5.2">0</div>
+                    <div class="stat-label">Million Cells</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🧪</div>
+                    <div class="stat-number" data-target="85">0</div>
+                    <div class="stat-label">Tissue Types</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-number" data-target="10000">0</div>
+                    <div class="stat-label">Analyses Run</div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    
-    <!-- Firebase SDKs -->
-    <script type="module" src="js/firebase-config.js"></script>
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-subtitle">Everything you need for comprehensive single-cell analysis</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Cell Type Identification</h3>
+                <p class="feature-description">Advanced machine learning algorithms automatically identify and classify cell types based on gene expression profiles with high accuracy.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3 class="feature-title">Interactive Visualization</h3>
+                <p class="feature-description">Explore your data with interactive 3D UMAP/t-SNE plots, heatmaps, and violin plots. Real-time rendering for millions of cells.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">Differential Expression</h3>
+                <p class="feature-description">Identify differentially expressed genes between cell populations with multiple statistical methods and FDR correction.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌊</div>
+                <h3 class="feature-title">Trajectory Analysis</h3>
+                <p class="feature-description">Reconstruct developmental trajectories and pseudotime ordering to understand cellular differentiation processes.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3 class="feature-title">Pathway Enrichment</h3>
+                <p class="feature-description">Comprehensive pathway and gene ontology enrichment analysis with integration to major databases.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">AI-Powered Insights</h3>
+                <p class="feature-description">Leverage deep learning models trained on millions of cells for automated annotation and novel cell type discovery.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analysis Tools Section -->
+    <section class="tools-section" id="tools">
+        <div class="section-header">
+            <h2 class="section-title">Analysis Tools</h2>
+            <p class="section-subtitle">Professional-grade tools for every step of your analysis</p>
+        </div>
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="tool-icon">🧮</div>
+                <h3 class="tool-title">Quality Control</h3>
+                <p class="tool-description">Filter cells and genes based on expression levels, mitochondrial content, and other QC metrics.</p>
+            </div>
+            <div class="tool-card">
+                <div class="tool-icon">🎨</div>
+                <h3 class="tool-title">Clustering</h3>
+                <p class="tool-description">Multiple clustering algorithms including Leiden, Louvain, and hierarchical clustering.</p>
+            </div>
+            <div class="tool-card">
+                <div class="tool-icon">🔬</div>
+                <h3 class="tool-title">Integration</h3>
+                <p class="tool-description">Integrate multiple datasets with batch correction using Harmony, Seurat, or BBKNN.</p>
+            </div>
     <script src="js/main.js"></script>
 </body>
 </html>
