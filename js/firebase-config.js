@@ -1,8 +1,8 @@
-// Import Firebase SDKs
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, collection, getDocs, doc, setDoc, addDoc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+// Import Firebase SDKs - Using version 9 modular SDK
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -16,13 +16,25 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+let app;
+let auth;
+let db;
+let storage;
 
-// Make Firebase services globally available
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+  
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
+
+// Make Firebase services globally available with error handling
 window.firebase = {
+  app,
   auth,
   db,
   storage,
@@ -38,25 +50,110 @@ window.firebase = {
   query,
   where,
   orderBy,
+  limit,
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
+  initialized: true
 };
 
-// Initialize auth state listener
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in
-    document.getElementById('login-nav').classList.add('d-none');
-    document.getElementById('user-nav').classList.remove('d-none');
-    document.getElementById('user-email').textContent = user.email;
-    console.log('User signed in:', user.email);
+// Initialize authentication state listener
+function setupAuthListener() {
+  if (!auth) {
+    console.error('Auth not initialized');
+    return;
+  }
+  
+  onAuthStateChanged(auth, (user) => {
+    console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
+    
+    const loginNav = document.getElementById('login-nav');
+    const userNav = document.getElementById('user-nav');
+    const userEmail = document.getElementById('user-email');
+    
+    if (user) {
+      // User is signed in
+      if (loginNav) loginNav.classList.add('d-none');
+      if (userNav) userNav.classList.remove('d-none');
+      if (userEmail) userEmail.textContent = user.email;
+      
+      // Update user last active time
+      updateUserLastActive(user.uid);
+      
+    } else {
+      // User is signed out
+      if (loginNav) loginNav.classList.remove('d-none');
+      if (userNav) userNav.classList.add('d-none');
+    }
+    
+    // Trigger custom event for other parts of the app
+    window.dispatchEvent(new CustomEvent('authStateChanged', { detail: user }));
+  });
+}
+
+// Update user's last active timestamp
+async function updateUserLastActive(uid) {
+  if (!db) return;
+  
+  try {
+    await setDoc(doc(db, 'users', uid), {
+      lastActive: new Date()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error updating user last active:', error);
+  }
+}
+
+// Wait for DOM to be ready before setting up auth
+function initializeAuth() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAuthListener);
   } else {
-    // User is signed out
-    document.getElementById('login-nav').classList.remove('d-none');
-    document.getElementById('user-nav').classList.add('d-none');
-    console.log('User signed out');
+    setupAuthListener();
+  }
+}
+
+// Start auth initialization
+initializeAuth();
+
+// Global error handler for Firebase operations
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason && typeof event.reason === 'object' && event.reason.code) {
+    console.error('Firebase error:', event.reason.code, event.reason.message);
+    
+    // Prevent the error from appearing in console if it's a Firebase auth error
+    if (event.reason.code && event.reason.code.startsWith('auth/')) {
+      event.preventDefault();
+    }
   }
 });
 
-console.log('Firebase initialized successfully');
+// Test Firebase connection
+async function testFirebaseConnection() {
+  try {
+    if (!db) {
+      console.warn('Firestore not initialized');
+      return false;
+    }
+    
+    // Try to read from a collection
+    await getDocs(collection(db, 'test'));
+    console.log('Firebase connection test successful');
+    return true;
+  } catch (error) {
+    console.error('Firebase connection test failed:', error);
+    return false;
+  }
+}
+
+// Export for debugging (only in development)
+if (window.location.hostname === 'localhost' || window.location.hostname.includes('github.io')) {
+  window.firebaseApp = app;
+  window.firebaseAuth = auth;
+  window.firebaseDb = db;
+  window.testFirebaseConnection = testFirebaseConnection;
+}
+
+// Signal that Firebase config is loaded
+window.firebaseConfigLoaded = true;
+console.log('Firebase config module loaded');
